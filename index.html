@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Crop Prediction System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-green-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">CropSense AI</h1>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-green-200" onclick="showDashboard()">Dashboard</a>
+                <a href="#" class="hover:text-green-200" onclick="showAddCrop()">Add Crop</a>
+                <a href="#" class="hover:text-green-200" onclick="showContact()">Contact</a>
+                <button id="authBtn" onclick="toggleAuth()" class="bg-white text-green-600 px-4 py-2 rounded-lg">Login</button>
+            </div>
+            <button class="md:hidden" onclick="toggleMenu()">
+                <i class="bi bi-list text-2xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden bg-green-600 text-white p-4">
+        <div class="flex flex-col space-y-4">
+            <a href="#" onclick="showDashboard()">Dashboard</a>
+            <a href="#" onclick="showAddCrop()">Add Crop</a>
+            <a href="#" onclick="showContact()">Contact</a>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg w-96">
+            <h2 class="text-2xl font-bold mb-4" id="authTitle">Login</h2>
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <input type="email" placeholder="Email" class="w-full p-2 mb-4 border rounded" required>
+                <input type="password" placeholder="Password" class="w-full p-2 mb-4 border rounded" required>
+                <button type="submit" class="w-full bg-green-600 text-white p-2 rounded">Submit</button>
+            </form>
+            <p class="mt-4 text-center">
+                <a href="#" onclick="toggleAuthMode()" class="text-green-600">Switch to Register</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4">
+        <!-- Dashboard -->
+        <div id="dashboard" class="space-y-6">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Device Card Template -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Device 1</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Nitrogen:</span>
+                            <span class="font-bold">45 mg/kg</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Phosphorus:</span>
+                            <span class="font-bold">28 mg/kg</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Potassium:</span>
+                            <span class="font-bold">35 mg/kg</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>pH:</span>
+                            <span class="font-bold">6.8</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Temperature:</span>
+                            <span class="font-bold">25°C</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Soil Moisture:</span>
+                            <span class="font-bold">65%</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <select class="w-full p-2 border rounded" onchange="updateCropRecommendation(this)">
+                            <option value="">Select Crop</option>
+                            <option value="wheat">Wheat</option>
+                            <option value="rice">Rice</option>
+                            <option value="corn">Corn</option>
+                        </select>
+                    </div>
+                    <div class="mt-4 p-4 bg-green-100 rounded">
+                        <h4 class="font-bold">Recommendations:</h4>
+                        <p id="recommendations">Please select a crop to get recommendations.</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="addDevice()" class="bg-green-600 text-white px-6 py-2 rounded-lg">
+                <i class="bi bi-plus"></i> Add Device
+            </button>
+        </div>
+
+        <!-- Add Crop Form -->
+        <div id="addCrop" class="hidden max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6">Add New Crop</h2>
+            <form onsubmit="handleAddCrop(event)" class="space-y-4">
+                <div>
+                    <label class="block mb-2">Crop Name</label>
+                    <input type="text" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-2">Optimal Conditions</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" placeholder="Min Nitrogen (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max Nitrogen (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Min Phosphorus (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max Phosphorus (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Min Potassium (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max Potassium (mg/kg)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Min pH" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max pH" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Min Temperature (°C)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max Temperature (°C)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Min Soil Moisture (%)" class="p-2 border rounded" required>
+                        <input type="number" placeholder="Max Soil Moisture (%)" class="p-2 border rounded" required>
+                    </div>
+                </div>
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg">Add Crop</button>
+            </form>
+        </div>
+
+        <!-- Contact Form -->
+        <div id="contact" class="hidden max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6">Contact Us</h2>
+            <form onsubmit="handleContact(event)" class="space-y-4">
+                <div>
+                    <label class="block mb-2">Name</label>
+                    <input type="text" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-2">Email</label>
+                    <input type="email" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-2">Message</label>
+                    <textarea class="w-full p-2 border rounded h-32" required></textarea>
+                </div>
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg">Send Message</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // MongoDB App Slug
+        const APP_SLUG = 'crop-prediction-123456';
+
+        // Authentication State
+        let isLoggedIn = false;
+        let isLoginMode = true;
+
+        // UI Functions
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('addCrop').classList.add('hidden');
+            document.getElementById('contact').classList.add('hidden');
+        }
+
+        function showAddCrop() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('addCrop').classList.remove('hidden');
+            document.getElementById('contact').classList.add('hidden');
+        }
+
+        function showContact() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('addCrop').classList.add('hidden');
+            document.getElementById('contact').classList.remove('hidden');
+        }
+
+        // Authentication Functions
+        function toggleAuth() {
+            const modal = document.getElementById('authModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').textContent = isLoginMode ? 'Login' : 'Register';
+        }
+
+        async function handleAuth(event) {
+            event.preventDefault();
+            // Implement authentication logic here
+            toggleAuth();
+            isLoggedIn = true;
+            document.getElementById('authBtn').textContent = 'Logout';
+        }
+
+        // Device Management
+        function addDevice() {
+            const deviceCard = document.querySelector('.grid').children[0].cloneNode(true);
+            deviceCard.querySelector('h3').textContent = `Device ${document.querySelector('.grid').children.length + 1}`;
+            document.querySelector('.grid').appendChild(deviceCard);
+        }
+
+        // Crop Management
+        async function handleAddCrop(event) {
+            event.preventDefault();
+            // Implement crop addition logic here using MongoDB endpoint
+            alert('Crop added successfully!');
+            event.target.reset();
+        }
+
+        // Contact Form
+        async function handleContact(event) {
+            event.preventDefault();
+            // Implement contact form submission logic here
+            alert('Message sent successfully!');
+            event.target.reset();
+        }
+
+        // Crop Recommendations
+        function updateCropRecommendation(select) {
+            const recommendations = select.parentElement.nextElementSibling.querySelector('#recommendations');
+            const selectedCrop = select.value;
+            
+            if (!selectedCrop) {
+                recommendations.textContent = 'Please select a crop to get recommendations.';
+                return;
+            }
+
+            // Simulate analyzing sensor data and providing recommendations
+            const sensorData = {
+                nitrogen: 45,
+                phosphorus: 28,
+                potassium: 35,
+                ph: 6.8,
+                temperature: 25,
+                moisture: 65
+            };
+
+            let recommendation = `Based on current conditions for ${selectedCrop}:\n`;
+            if (sensorData.nitrogen < 40) recommendation += '\n- Increase nitrogen fertilization';
+            if (sensorData.moisture < 60) recommendation += '\n- Increase irrigation';
+            if (sensorData.ph < 6.5) recommendation += '\n- Add lime to increase soil pH';
+
+            recommendations.textContent = recommendation || 'Conditions are optimal for this crop.';
+        }
+
+        // Initialize the app
+        showDashboard();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
